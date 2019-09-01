@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 import time
 import imutils
+import keyInp
 
 pt1 = (0,0)
 pt2 = (0,0)
@@ -65,23 +66,27 @@ def screen_record():
     
         last_time = time.time()
         monitor = {"top":pt1[1]+150,"left":pt1[0],"width":pt2[0]-pt1[0],"height":pt2[1]-pt1[1]}
+        k = 1
         while(True):
             printroi =  np.array(sct.grab(monitor))
             gray_roi = cv2.cvtColor(printroi,cv2.COLOR_BGR2GRAY)
 #             print('fps {}'.format(1/(time.time()-last_time)))
             ret,thresh = cv2.threshold(gray_roi,127,255,cv2.THRESH_BINARY_INV)
             x = 0 #The value of symmetry
+            v = 0 #Velocity of obstacles(Relative)
             extr = findExtremes(thresh)
             extRight = tuple(extr[extr[:, :, 0].argmax()][0])
             extTop = tuple(extr[extr[:, :, 1].argmin()][0])
             extBot = tuple(extr[extr[:, :, 1].argmax()][0])
             shape_roi = gray_roi.shape
-            cv2.line(printroi,(extRight[0],0),(extRight[0],extBot[1]),(255,0,0),1)
-            cv2.line(printroi,(0,extTop[0]),(shape_roi[1],extTop[0]),(0,255,0),1)
-            cv2.line(printroi,(0,extBot[0]),(shape_roi[1],extBot[0]),(0,0,255),1)
-            
+            cv2.line(printroi,(extRight[0] + x,0),(extRight[0] + x,extBot[1]),(255,0,0),1)
+            cv2.line(printroi,(0,extTop[1]),(shape_roi[1],extTop[1]),(0,255,0),1)
+            cv2.line(printroi,(0,extBot[1]),(shape_roi[1],extBot[1]),(0,0,255),1)
+            if(k == 27):
+                keyInp.getSpace()
 #             last_time = time.time()
             cv2.imshow('frame',cv2.cvtColor(printroi, cv2.COLOR_BGR2RGB))
+            k = (k + 1)%28
             if cv2.waitKey(25) & 0xFF == ord('q'):
                 cv2.destroyAllWindows()
                 break
@@ -92,6 +97,8 @@ def findExtremes(img):
     cnts = imutils.grab_contours(cnts)
     c = max(cnts, key=cv2.contourArea)
     return c
+
+
     
     
 screen_record()
